@@ -45,7 +45,7 @@ jobs:
       - name: Install GDB
         run: |
           cd gdb-9.2-build
-          make install DESTDIR=$HOME/gdb_install
+          make install
           echo "Installation completed."
 
       - name: List installed files
