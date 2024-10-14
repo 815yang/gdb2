@@ -46,6 +46,10 @@ jobs:
           cd gdb-9.2-build
           make install DESTDIR=../gdb-install
 
+      - name: List installed files
+        run: |
+          ls -la ../gdb-install
+
       - name: Upload GDB artifact
         uses: actions/upload-artifact@v3
         with:
