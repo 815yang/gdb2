@@ -52,8 +52,15 @@ jobs:
         run: |
           ls -la $HOME/gdb_install/bin || echo "No files found in gdb_install/bin."
 
+      - name: Find gdbserver globally
+        id: find_gdbserver
+        run: |
+          GDBSERVER_PATH=$(find / -name gdbserver 2>/dev/null)
+          echo "GDBSERVER_PATH=$GDBSERVER_PATH" >> $GITHUB_ENV
+
       - name: Upload gdbserver artifact
+        if: env.GDBSERVER_PATH != ''
         uses: actions/upload-artifact@v3
         with:
           name: gdbserver
-          path: $HOME/gdb_install/bin/gdbserver
+          path: ${{ env.GDBSERVER_PATH }}
