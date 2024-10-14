@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       - name: Set up dependencies
         run: |
@@ -27,24 +27,24 @@ jobs:
             gcc-mipsel-linux-gnu \
             g++-mipsel-linux-gnu \
             libc6-dev-mipsel-cross \
-            musl-tools  # 提供静态链接支持
+            musl-tools
 
       - name: Download GDB source
         run: |
           wget http://ftp.gnu.org/gnu/gdb/gdb-9.2.tar.gz
           tar -xzvf gdb-9.2.tar.gz
-          cd gdb-9.2
 
       - name: Build GDB
         run: |
-          cd gdb-9.2
-          ./configure --target=mipsel-linux-gnu --enable-static --disable-shared
+          mkdir gdb-9.2-build
+          cd gdb-9.2-build
+          ../gdb-9.2/configure --target=mipsel-linux-gnu --enable-static --disable-shared
           make
 
       - name: Install GDB
         run: |
-          cd gdb-9.2
-          make install DESTDIR=./gdb-install
+          cd gdb-9.2-build
+          make install DESTDIR=../gdb-install
 
       - name: Upload GDB artifact
         uses: actions/upload-artifact@v3
