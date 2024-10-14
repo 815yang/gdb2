@@ -1,10 +1,10 @@
-name: Build static GDB for MIPSel
+name: Build Static GDB 7.2
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
 
 jobs:
   build:
@@ -12,104 +12,26 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
-      - name: Install build dependencies
+      - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            autoconf \
-            automake \
-            libtool \
-            libncurses5-dev \
-            libncursesw5-dev \
-            libexpat1-dev \
-            libz-dev \
-            libpython3-dev \
-            git \
-            build-essential \
-            wget \
-            gcc-mipsel-linux-gnu \
-            g++-mipsel-linux-gnu
+          sudo apt-get install -y build-essential texinfo
 
-      - name: Build GMP
+      - name: Download GDB 7.2
         run: |
-          wget https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.gz
-          tar -xzf gmp-6.3.0.tar.gz
-          cd gmp-6.3.0
-          ./configure --host=mipsel-linux-gnu --prefix=$(pwd)/_install
-          make -j$(nproc)
-          make install
-          cd ..
-
-      - name: Build MPFR
-        run: |
-          wget https://ftp.gnu.org/gnu/mpfr/mpfr-4.1.0.tar.gz
-          tar -xzf mpfr-4.1.0.tar.gz
-          cd mpfr-4.1.0
-          ./configure --host=mipsel-linux-gnu --prefix=$(pwd)/_install --with-gmp=$(pwd)/../gmp-6.3.0/_install
-          make -j$(nproc)
-          make install
-          cd ..
-
-      - name: Check GMP and MPFR installation
-        run: |
-          echo "GMP installation files:"
-          find gmp-6.3.0/_install -name "*.a" -o -name "*.so" -o -name "*.h"
-          echo "MPFR installation files:"
-          find mpfr-4.1.0/_install -name "*.a" -o -name "*.so" -o -name "*.h"
-
-      - name: Set absolute paths for GMP and MPFR
-        run: |
-          export GMP_PATH=$(find $(pwd)/gmp-6.3.0/_install -type d -name "lib" | head -n 1)
-          export MPFR_PATH=$(find $(pwd)/mpfr-4.1.0/_install -type d -name "lib" | head -n 1)
-          echo "GMP Path: $GMP_PATH"
-          echo "MPFR Path: $MPFR_PATH"
-          echo "GMP Include: $(pwd)/gmp-6.3.0/_install/include" >> $GITHUB_ENV
-          echo "MPFR Include: $(pwd)/mpfr-4.1.0/_install/include" >> $GITHUB_ENV
-
-      - name: Install MIPSel Toolchain
-        run: |
-          wget https://ftp.gnu.org/gnu/binutils/binutils-2.37.tar.gz
-          tar -xzf binutils-2.37.tar.gz
-          cd binutils-2.37
-          ./configure --target=mipsel-linux-gnu --disable-multilib --prefix=/usr/local
-          make -j$(nproc)
-          sudo make install
-          cd ..
-
-      - name: Download GDB source
-        run: |
-          wget https://ftp.gnu.org/gnu/gdb/gdb-15.2.tar.gz
-          tar -xzf gdb-15.2.tar.gz
-
-      - name: Verify GDB source download
-        run: |
-          if [ ! -d gdb-15.2 ]; then
-            echo "GDB source not downloaded correctly!"
-            exit 1
-          fi
+          wget http://ftp.gnu.org/gnu/gdb/gdb-7.2.tar.gz
+          tar -xzvf gdb-7.2.tar.gz
+          cd gdb-7.2
 
       - name: Build GDB
         run: |
-          cd gdb-15.2
-          ./configure --target=mipsel-linux-gnu \
-                      --prefix=$(pwd)/_install \
-                      --without-x \
-                      --disable-gas \
-                      --disable-binutils \
-                      --disable-gprof \
-                      --disable-addr2line \
-                      --disable-libbfd \
-                      --with-gmp=${GMP_PATH} \
-                      --with-mpfr=${MPFR_PATH} \
-                      CPPFLAGS="-I$(pwd)/../gmp-6.3.0/_install/include -I$(pwd)/../mpfr-4.1.0/_install/include" \
-                      LDFLAGS="-L${GMP_PATH} -L${MPFR_PATH}"
-          make -j$(nproc)
-          make install
+          cd gdb-7.2
+          ./configure --enable-static --disable-shared
+          make
+          sudo make install
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: gdb-static
-          path: gdb-15.2/_install
+      - name: Verify GDB installation
+        run: |
+          gdb --version
