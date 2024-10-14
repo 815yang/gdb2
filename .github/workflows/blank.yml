@@ -36,7 +36,7 @@ jobs:
           wget https://ftp.gnu.org/gnu/gdb/gdb-9.2.tar.gz
           tar -xzf gdb-9.2.tar.gz
           cd gdb-9.2
-          cd ..
+          
 
       - name: Build and install GDB
         run: |
