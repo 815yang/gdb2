@@ -40,15 +40,22 @@ jobs:
           cd gdb-9.2-build
           ../gdb-9.2/configure --target=mipsel-linux-gnu --enable-static --disable-shared
           make
+          echo "Build completed."
+
+      - name: Create gdb-install directory
+        run: |
+          mkdir -p ../gdb-install
+          echo "gdb-install directory created."
 
       - name: Install GDB
         run: |
           cd gdb-9.2-build
           make install DESTDIR=../gdb-install
+          echo "Installation completed."
 
       - name: List installed files
         run: |
-          ls -la ../gdb-install
+          ls -la ../gdb-install || echo "No files found in gdb-install."
 
       - name: Upload GDB artifact
         uses: actions/upload-artifact@v3
