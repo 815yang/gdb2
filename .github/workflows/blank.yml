@@ -1,4 +1,4 @@
-name: Build Static GDB 7.1
+name: Build Static GDB 7.4.1
 
 on:
   push:
@@ -19,15 +19,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential texinfo
 
-      - name: Download GDB 7.1
+      - name: Download GDB 7.4.1
         run: |
-          wget http://ftp.gnu.org/gnu/gdb/gdb-7.1.tar.gz
-          tar -xzvf gdb-7.1.tar.gz
-          cd gdb-7.1
+          wget http://ftp.gnu.org/gnu/gdb/gdb-7.4.1.tar.gz
+          tar -xzvf gdb-7.4.1.tar.gz
+          cd gdb-7.4.1
 
       - name: Build GDB
         run: |
-          cd gdb-7.1
+          cd gdb-7.4.1
           ./configure --enable-static --disable-shared
           make
           sudo make install
