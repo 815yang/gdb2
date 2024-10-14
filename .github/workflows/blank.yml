@@ -1,0 +1,119 @@
+name: Build static GDB for MIPSel
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            automake \
+            libtool \
+            libncurses5-dev \
+            libncursesw5-dev \
+            libexpat1-dev \
+            libz-dev \
+            libpython3-dev \
+            git \
+            build-essential \
+            wget \
+            gcc-mipsel-linux-gnu \
+            g++-mipsel-linux-gnu
+
+      - name: Build GMP
+        run: |
+          wget https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.gz
+          tar -xzf gmp-6.3.0.tar.gz
+          cd gmp-6.3.0
+          ./configure --host=mipsel-linux-gnu --prefix=$(pwd)/_install
+          make -j$(nproc)
+          make install
+          echo "GMP_INSTALL=$(pwd)/_install" >> $GITHUB_ENV
+          cd ..
+
+      - name: Build MPFR
+        run: |
+          wget https://ftp.gnu.org/gnu/mpfr/mpfr-4.1.0.tar.gz
+          tar -xzf mpfr-4.1.0.tar.gz
+          cd mpfr-4.1.0
+          ./configure --host=mipsel-linux-gnu --prefix=$(pwd)/_install --with-gmp=${{ env.GMP_INSTALL }}
+          make -j$(nproc)
+          make install
+          echo "MPFR_INSTALL=$(pwd)/_install" >> $GITHUB_ENV
+          cd ..
+
+      - name: Check GMP and MPFR installation
+        run: |
+          echo "GMP installation files:"
+          find gmp-6.3.0/_install -name "*.a" -o -name "*.so" -o -name "*.h"
+          echo "MPFR installation files:"
+          find mpfr-4.1.0/_install -name "*.a" -o -name "*.so" -o -name "*.h"
+
+      - name: Verify GMP and MPFR installations
+        run: |
+          if [ ! -f gmp-6.3.0/_install/lib/libgmp.a ]; then
+            echo "GMP not installed correctly!"
+            exit 1
+          fi
+          if [ ! -f mpfr-4.1.0/_install/lib/libmpfr.a ]; then
+            echo "MPFR not installed correctly!"
+            exit 1
+          fi
+
+      - name: Install MIPSel Toolchain
+        run: |
+          wget https://ftp.gnu.org/gnu/binutils/binutils-2.37.tar.gz
+          tar -xzf binutils-2.37.tar.gz
+          cd binutils-2.37
+          ./configure --target=mipsel-linux-gnu --disable-multilib --prefix=/usr/local
+          make -j$(nproc)
+          sudo make install
+          cd ..
+
+      - name: Download GDB source
+        run: |
+          wget https://ftp.gnu.org/gnu/gdb/gdb-15.2.tar.gz
+          tar -xzf gdb-15.2.tar.gz
+
+      - name: Verify GDB source download
+        run: |
+          if [ ! -d gdb-15.2 ]; then
+            echo "GDB source not downloaded correctly!"
+            exit 1
+          fi
+
+      - name: Build GDB
+        run: |
+          cd gdb-15.2
+          ./configure --target=mipsel-linux-gnu \
+                      --prefix=$(pwd)/_install \
+                      --without-x \
+                      --disable-gas \
+                      --disable-binutils \
+                      --disable-gprof \
+                      --disable-addr2line \
+                      --disable-libbfd \
+                      --with-gmp=${{ env.GMP_INSTALL }} \
+                      --with-mpfr=${{ env.MPFR_INSTALL }} \
+                      CPPFLAGS="-I${{ env.GMP_INSTALL }}/include -I${{ env.MPFR_INSTALL }}/include" \
+                      LDFLAGS="-L${{ env.GMP_INSTALL }}/lib -L${{ env.MPFR_INSTALL }}/lib"
+          make -j$(nproc)
+          make install
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gdb-static
+          path: gdb-15.2/_install
