@@ -50,10 +50,10 @@ jobs:
 
       - name: List installed files
         run: |
-          ls -la $HOME/gdb_install || echo "No files found in gdb_install."
+          ls -la $HOME/gdb_install/bin || echo "No files found in gdb_install/bin."
 
-      - name: Upload GDB artifact
+      - name: Upload gdbserver artifact
         uses: actions/upload-artifact@v3
         with:
-          name: gdb
-          path: $HOME/gdb_install/*
+          name: gdbserver
+          path: $HOME/gdb_install/bin/gdbserver
