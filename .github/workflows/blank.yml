@@ -44,21 +44,21 @@ jobs:
 
       - name: Create gdb-install directory
         run: |
-          mkdir /gdb_install
+          mkdir -p gdb_install
           echo "gdb-install directory created."
 
       - name: Install GDB
         run: |
           cd gdb-9.2-build
-          make install DESTDIR=/gdb_install
+          make install DESTDIR=./gdb_install
           echo "Installation completed."
 
       - name: List installed files
         run: |
-          ls -la /gdb_install || echo "No files found in gdb_install."
+          ls -la gdb_install || echo "No files found in gdb_install."
 
       - name: Upload GDB artifact
         uses: actions/upload-artifact@v3
         with:
           name: gdb
-          path: /gdb_install
+          path: gdb_install
