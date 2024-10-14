@@ -19,16 +19,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             build-essential \
-            g++-mipsel-linux-gnu \
-            binutils-mipsel-linux-gnu \
-            texinfo \
             git \
+            wget \
+            bison \
+            flex \
+            texinfo \
+            gcc-mipsel-linux-gnu \
+            g++-mipsel-linux-gnu \
             libc6-dev-mipsel-cross \
-            libgcc-8-dev-mipsel-cross \
-            libstdc++-8-dev-mipsel-cross \
-            mipsel-linux-gnu-gcc \
-            mipsel-linux-gnu-g++ \
-            musl-tools  # 可选，提供静态链接支持
+            musl-tools  # 提供静态链接支持
 
       - name: Download GDB source
         run: |
